@@ -9,24 +9,33 @@ Mastodon bot API documentation:
     https://mastodonpy.readthedocs.io/en/stable/
 
 TODO:
-           - Prompt for tokens then write them to a file (no need for cred.py)
            - Generally nice and friendly installation?
     [MT]   - Handle character limit exceptions
     [MT]   - Handle all other exceptions
-    [TG]   - Try parsing md or html instead of None
+    [TG]   - Try parsing md or html instead of None | handle links
     [TG-MT]- Handle image reposts
 '''
-
+import os
 import logging
 import telebot
 from mastodon import Mastodon
-from credentials import mastodon_token, telegram_token
 
 logging.basicConfig(format='%(asctime)s: %(levelname)s %(name)s | %(message)s',
                     level=logging.INFO)
 
+if (os.path.isfile("credentials.py") == False):
+    logging.info("No credentials found")
+    telegram_token = input("Enter your telegram bot token: ")
+    mastodon_token = input("Enter your mastodon bot token: ")
+    with open("credentials.py", "w") as creds:
+        creds.write(f"telegram_token = '{telegram_token}' " +
+                    "\n" + f"mastodon_token = '{mastodon_token}'")
+else:
+    logging.info("Running normally")
+    from credentials import mastodon_token, telegram_token
+
 '''
-Mastodon
+Bots
 '''
 mastodon_bot = Mastodon(access_token=mastodon_token,
                         api_base_url="https://mastodon.social")
@@ -34,14 +43,17 @@ mastodon_bot = Mastodon(access_token=mastodon_token,
 # Posts a single test message --> toot variable stores returned value
 # toot = mastodon_bot.status_post("Test message")
 
-'''
-Telegram
-'''
+
+# Telegram
 # parse mode can be either HTML or MARKDOWN
-bot = telebot.TeleBot(telegram_token, parse_mode=None)
+bot = telebot.TeleBot(telegram_token, parse_mode="MARKDOWN")
 
 
-# This one gets the channel message and posts it -> to mastodon
+'''
+Posting
+'''
+
+
 @bot.channel_post_handler(content_types=["text", "photo", "video", "audio", "document"])
 def get_message(message):
     logging.info(f"New telegram post: {message}")
@@ -59,12 +71,4 @@ def get_message(message):
     logging.info(f"Posted: {posted}")
 
 
-# @bot.message_handler(commands=['start', 'help'])
-# def send_welcome(message):
-#     bot.reply_to(message, "START || HELP: COMMAND NOT SUPPORTED")
-
-
-# @bot.message_handler(func=lambda m: True)
-# def echo_all(message):
-#     bot.reply_to(message, message.text)
 bot.polling()
