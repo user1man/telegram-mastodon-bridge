@@ -23,7 +23,7 @@ from mastodon import Mastodon
 logging.basicConfig(format='%(asctime)s: %(levelname)s %(name)s | %(message)s',
                     level=logging.INFO)
 logger = telebot.logger.setLevel(logging.INFO)
-
+# check if credentials exist, create if not
 if (os.path.isfile("credentials.py") == False):
     logging.info("No credentials found")
     telegram_token = input("Enter your telegram bot token: ")
@@ -35,24 +35,40 @@ if (os.path.isfile("credentials.py") == False):
                     "\n" + f"mastodon_token = '{mastodon_token}'" +
                     "\n" + f"mastodon_instance = '{mastodon_instance}'")
 else:
+    try:
+        from credentials import mastodon_token, telegram_token, mastodon_instance
+    except ImportError:
+        logging.fatal("Something is wrong with credentials.py")  # ???
+        exit(1)
     logging.info("Running normally")
-    from credentials import mastodon_token, telegram_token, mastodon_instance
 
 '''
 Bots
 '''
+# Mastodon
 mastodon_bot = Mastodon(access_token=mastodon_token,
                         api_base_url=mastodon_instance)  # i.e.https://mastodon.social
 
-# Posts a single test message --> toot variable stores returned value
-# toot = mastodon_bot.status_post("Test message")
-
+# See if the bot can be accessed
+try:
+    ping_mastodon = mastodon_bot.me()["username"]
+    logging.info(f"Running mastodon as {ping_mastodon}")
+except:
+    logging.fatal("Failed to verify mastodon access token.")
+    exit(1)
 
 # Telegram
 # parse mode can be either HTML or MARKDOWN
 bot = telebot.TeleBot(telegram_token, parse_mode="MARKDOWN")
-user = bot.get_me()
-logging.info(f"Running as {user.username}")
+
+# See if the bot can be accessed
+try:
+    ping_telegram = bot.get_me()
+    logging.info(f"Running telegram as {ping_telegram.username}")
+except:
+    logging.fatal("Failed to verify telegram token.")
+    exit(1)
+
 
 '''
 Posting
@@ -62,13 +78,14 @@ Posting
 # Repost 1 image (mastodon allows up to 4)
 @bot.channel_post_handler(content_types=["photo"])
 def get_image(message):
+    logging.debug(f"New message: {message}")
     try:
+        caption = message.json['caption']
         logging.info(
             f"New photo: {message.photo}\nCaption reads {message.json['caption']}")
-        caption = message.json['caption']
     except KeyError:
-        logging.info(f"New photo: {message.photo}\nNo caption")
         caption = None
+        logging.info(f"New photo: {message.photo}\nNo caption")
 
     fileID = message.photo[-1].file_id
     logging.info(f"Photo ID {fileID}")
@@ -82,19 +99,22 @@ def get_image(message):
     media_id = mastodon_bot.media_post("tmp.jpg")
     posted = mastodon_bot.status_post(
         status=caption, media_ids=media_id, visibility="direct")
-    logging.info(f"Posted: {posted}")
+    logging.info(f"Posted: {posted['uri']}")
 
 
 @bot.channel_post_handler(content_types=["text"])
 def get_text(message):
-    logging.info(f"New telegram post: {message}")
+    logging.debug(f"New telegram post: {message}")
     # Get text from telegram
     status_text = message.text
     logging.info(f"Status text: {status_text}")
     # Post final content https://mastodonpy.readthedocs.io/en/stable/#writing-data-statuses
     posted = mastodon_bot.status_post(
         status=status_text, media_ids=None, visibility="direct")
-    logging.info(f"Posted: {posted}")
+    logging.info(f"Posted: {posted['uri']}")
 
 
-bot.polling(interval=3)
+try:
+    bot.polling(interval=3)
+except KeyboardInterrupt:
+    exit(0)
