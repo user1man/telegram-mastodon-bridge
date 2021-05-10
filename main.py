@@ -27,18 +27,21 @@ if (os.path.isfile("credentials.py") == False):
     logging.info("No credentials found")
     telegram_token = input("Enter your telegram bot token: ")
     mastodon_token = input("Enter your mastodon bot token: ")
+    mastodon_instance = input(
+        "Enter url to instance where your bot is located(https://example.social): ")
     with open("credentials.py", "w") as creds:
-        creds.write(f"telegram_token = '{telegram_token}' " +
-                    "\n" + f"mastodon_token = '{mastodon_token}'")
+        creds.write(f"telegram_token = '{telegram_token}'" +
+                    "\n" + f"mastodon_token = '{mastodon_token}'" +
+                    "\n" + f"mastodon_instance = '{mastodon_instance}'")
 else:
     logging.info("Running normally")
-    from credentials import mastodon_token, telegram_token
+    from credentials import mastodon_token, telegram_token, mastodon_instance
 
 '''
 Bots
 '''
 mastodon_bot = Mastodon(access_token=mastodon_token,
-                        api_base_url="https://mastodon.social")
+                        api_base_url=mastodon_instance)  # i.e.https://mastodon.social
 
 # Posts a single test message --> toot variable stores returned value
 # toot = mastodon_bot.status_post("Test message")
