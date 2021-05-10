@@ -8,15 +8,8 @@ Telegram bot API documentation:
 Mastodon bot API documentation:
     https://mastodonpy.readthedocs.io/en/stable/
 
-|--------------------------------------------------------------|
-|                      General algorithm                       |
-|--------------------------------------------------------------|
-|    subscribe bot to x channel -> listen for new messages     |
-|        if there's a new message -> parse this message        |
-|   format it for mastodon -> make a post request to mastodon  |
-|--------------------------------------------------------------|
-
 TODO:
+           - Prompt for tokens then write them to a file (no need for cred.py)
            - Generally nice and friendly installation?
     [MT]   - Handle character limit exceptions
     [MT]   - Handle all other exceptions
@@ -41,7 +34,6 @@ mastodon_bot = Mastodon(access_token=mastodon_token,
 # Posts a single test message --> toot variable stores returned value
 # toot = mastodon_bot.status_post("Test message")
 
-
 '''
 Telegram
 '''
@@ -52,17 +44,19 @@ bot = telebot.TeleBot(telegram_token, parse_mode=None)
 # This one gets the channel message and posts it -> to mastodon
 @bot.channel_post_handler(content_types=["text", "photo", "video", "audio", "document"])
 def get_message(message):
-    print(message, "\n==================================================")
+    logging.info(f"New telegram post: {message}")
     # Get text from telegram
     status = message.text
+    logging.info(f"Status text: {status}")
     # Get images from telegram
     # +++TODO+++
-    # Post images https://mastodonpy.readthedocs.io/en/stable/#writing-data-media
+    # Post images to mastodon https://mastodonpy.readthedocs.io/en/stable/#writing-data-media
     # +++TODO+++
     media_ids = None
     # Post final content https://mastodonpy.readthedocs.io/en/stable/#writing-data-statuses
-    mastodon_bot.status_post(
-        status=status, media_ids=media_ids, visibility="public")
+    posted = mastodon_bot.status_post(
+        status=status, media_ids=media_ids, visibility="direct")
+    logging.info(f"Posted: {posted}")
 
 
 # @bot.message_handler(commands=['start', 'help'])
