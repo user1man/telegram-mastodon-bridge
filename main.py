@@ -23,6 +23,7 @@ from mastodon import Mastodon
 logging.basicConfig(format='%(asctime)s: %(levelname)s %(name)s | %(message)s',
                     level=logging.INFO)
 logger = telebot.logger.setLevel(logging.INFO)
+
 # check if credentials exist, create if not
 if (os.path.isfile("credentials.py") == False):
     logging.info("No credentials found")
@@ -31,17 +32,16 @@ if (os.path.isfile("credentials.py") == False):
     mastodon_instance = input(
         "Enter url to instance where your bot is located(https://example.social): ")
     with open("credentials.py", "w") as creds:
-        creds.write(f"telegram_token = '{telegram_token}'" +
-                    "\n" + f"mastodon_token = '{mastodon_token}'" +
-                    "\n" + f"mastodon_instance = '{mastodon_instance}'")
+        creds.write(
+            f"telegram_token = '{telegram_token}'\nmastodon_token = '{mastodon_token}'\nmastodon_instance = '{mastodon_instance}'")
 else:
     try:
         from credentials import mastodon_token, telegram_token, mastodon_instance
+        logging.info("Running normally")
     except ImportError:
-        logging.fatal("Something is wrong with credentials.py")  # ???
+        logging.fatal(
+            "Something is wrong with credentials, delete credentials.py and try again")
         exit(1)
-    logging.info("Running normally")
-
 '''
 Bots
 '''
@@ -75,7 +75,8 @@ Posting
 '''
 
 
-# Repost 1 image (mastodon allows up to 4)
+# Repost 1 image (mastodon allows up to 4 in one post)
+# This actually just posts multiple images in separate statuses and random order
 @bot.channel_post_handler(content_types=["photo"])
 def get_image(message):
     logging.debug(f"New message: {message}")
@@ -94,7 +95,7 @@ def get_image(message):
     downloaded_file = bot.download_file(file_info.file_path)
     with open("tmp.jpg", "wb") as tmp_image:
         tmp_image.write(downloaded_file)
-        logging.info(f"Downloaded {file_info} to {tmp_image}")
+        logging.info(f"Downloaded {file_info.file_path}")
 
     media_id = mastodon_bot.media_post("tmp.jpg")
     posted = mastodon_bot.status_post(
