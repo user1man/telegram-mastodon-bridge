@@ -76,18 +76,52 @@ Posting
 '''
 
 
+# Returns message text + channel name or title(if private)
+def footer(message, image=False):
+    if not image and message.forward_from_chat == None:
+        print("!!! message is text and is not forwarded")
+        try:
+            print("!!! Trying text + caption w/ username")
+            message_to_status = message.text + "\r\r@" + message.chat.username
+            return message_to_status
+        except TypeError:
+            print("!!! Trying text + caption w/ title")
+            message_to_status = message.text + "\r\r" + message.chat.title
+            return message_to_status
+    elif not image:
+        print("!!! message is text but is forwarded ")
+        try:
+            print("!!! Trying text + caption w/ username + forwarded from title")
+            message_to_status = message.text + "\r\r@" + message.chat.username + \
+                f"\nForwarded from {message.json.forward_from_chat.title}"
+            return message_to_status
+        except TypeError:
+            print("!!! Trying text + caption w/ username + forwarded from title")
+            message_to_status = message.text + "\r\r" + message.chat.title + \
+                f"Forwarded from {message.json['forward_from_chat']['username']}"
+            return message_to_status
+    elif image:
+        try:
+            print("!!! Trying image + caption w/ username")
+            message_to_status = message.json['caption'] + \
+                "\r\r" + message.chat.username
+            return message_to_status
+        except TypeError:
+            print("!!! Trying image + username")
+            message_to_status = message.chat.username
+            return message_to_status
+        except KeyError:
+            print("!!! Trying image + title")
+            message_to_status = message.chat.title
+            return message_to_status
+
+
 # Repost 1 image (mastodon allows up to 4 in one post)
 # This actually just posts multiple images in separate statuses and random order
 @bot.channel_post_handler(content_types=["photo"])
 def get_image(message):
     logging.info(f"New message: {message}")
-    try:
-        caption = message.json['caption'] + "\r\r" + message.chat.title
-        logging.info(
-            f"New photo: {message.photo}\nCaption reads {message.json['caption']}")
-    except KeyError:
-        caption = message.chat.title
-        logging.info(f"New photo: {message.photo}\nNo caption")
+    caption = footer(message, image=True)
 
     fileID = message.photo[-1].file_id
     logging.info(f"Photo ID {fileID}")
@@ -106,13 +140,7 @@ def get_image(message):
 @bot.channel_post_handler(content_types=["video"])
 def get_video(message):
     logging.info(message)
-    try:
-        caption = message.json['caption'] + "\r\r" + message.chat.title
-        logging.info(
-            f"New photo: {message.video}\nCaption reads {message.json['caption']}")
-    except KeyError:
-        caption = message.chat.title
-        logging.info(f"New photo: {message.photo}\nNo caption")
+    caption = footer(message, image=True)
 
     fileID = message.video.file_id
     logging.info(f"Video ID {fileID}")
@@ -134,9 +162,10 @@ def get_video(message):
 def get_text(message):
     logging.info(f"New telegram post: {message}")
     # Get text from telegram
-    status_text = message.text + "\r\r" + message.chat.title
+    status_text = footer(message, image=False)
     logging.info(f"Status text: {status_text}")
     # Post final content https://mastodonpy.readthedocs.io/en/stable/#writing-data-statuses
+    # For more details on how to solve character limits https://mastodonpy.readthedocs.io/en/stable/#mastodon.Mastodon.status_reply
     posted = mastodon_bot.status_post(
         status=status_text, visibility=mastodon_visibility)
     logging.info(f"Posted: {posted['uri']}")
