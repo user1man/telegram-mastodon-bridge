@@ -11,14 +11,15 @@ Mastodon bot API documentation:
 TODO:
            - Generally nice and friendly installation?
     [MT]   - Handle character limit exceptions
-    [MT]   - Handle all other exceptions
-    [TG]   - Try parsing md or html instead of None | handle links
-    [TG-MT]- Handle image reposts
 '''
 import os
 import logging
 import telebot
 from mastodon import Mastodon
+
+
+# visibility of mastodon posts: direct, unlisted, public, etc.
+mastodon_visibility = "direct"
 
 logging.basicConfig(format='%(asctime)s: %(levelname)s %(name)s | %(message)s',
                     level=logging.INFO)
@@ -59,7 +60,7 @@ except:
 
 # Telegram
 # parse mode can be either HTML or MARKDOWN
-bot = telebot.TeleBot(telegram_token, parse_mode="MARKDOWN")
+bot = telebot.TeleBot(telegram_token, parse_mode="HTML")
 
 # See if the bot can be accessed
 try:
@@ -79,13 +80,13 @@ Posting
 # This actually just posts multiple images in separate statuses and random order
 @bot.channel_post_handler(content_types=["photo"])
 def get_image(message):
-    logging.debug(f"New message: {message}")
+    logging.info(f"New message: {message}")
     try:
-        caption = message.json['caption']
+        caption = message.json['caption'] + "\r\r" + message.chat.title
         logging.info(
             f"New photo: {message.photo}\nCaption reads {message.json['caption']}")
     except KeyError:
-        caption = None
+        caption = message.chat.title
         logging.info(f"New photo: {message.photo}\nNo caption")
 
     fileID = message.photo[-1].file_id
@@ -95,23 +96,49 @@ def get_image(message):
     downloaded_file = bot.download_file(file_info.file_path)
     with open("tmp.jpg", "wb") as tmp_image:
         tmp_image.write(downloaded_file)
-        logging.info(f"Downloaded {file_info.file_path}")
 
     media_id = mastodon_bot.media_post("tmp.jpg")
     posted = mastodon_bot.status_post(
-        status=caption, media_ids=media_id, visibility="direct")
+        status=caption, media_ids=media_id, visibility=mastodon_visibility)
     logging.info(f"Posted: {posted['uri']}")
 
 
+@bot.channel_post_handler(content_types=["video"])
+def get_video(message):
+    logging.info(message)
+    try:
+        caption = message.json['caption'] + "\r\r" + message.chat.title
+        logging.info(
+            f"New photo: {message.video}\nCaption reads {message.json['caption']}")
+    except KeyError:
+        caption = message.chat.title
+        logging.info(f"New photo: {message.photo}\nNo caption")
+
+    fileID = message.video.file_id
+    logging.info(f"Video ID {fileID}")
+
+    file_info = bot.get_file(fileID)
+    downloaded_file = bot.download_file(file_info.file_path)
+    with open("tmp_video", "wb") as tmp_video:
+        tmp_video.write(downloaded_file)
+
+    media_id = mastodon_bot.media_post(
+        "tmp_video", mime_type=message.video.mime_type)
+    posted = mastodon_bot.status_post(
+        status=caption, media_ids=media_id, visibility=mastodon_visibility)
+    logging.info(f"Posted: {posted['uri']}")
+
+
+# repost text messages
 @bot.channel_post_handler(content_types=["text"])
 def get_text(message):
-    logging.debug(f"New telegram post: {message}")
+    logging.info(f"New telegram post: {message}")
     # Get text from telegram
-    status_text = message.text
+    status_text = message.text + "\r\r" + message.chat.title
     logging.info(f"Status text: {status_text}")
     # Post final content https://mastodonpy.readthedocs.io/en/stable/#writing-data-statuses
     posted = mastodon_bot.status_post(
-        status=status_text, media_ids=None, visibility="direct")
+        status=status_text, visibility=mastodon_visibility)
     logging.info(f"Posted: {posted['uri']}")
 
 
