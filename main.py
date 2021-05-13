@@ -9,8 +9,9 @@ Mastodon bot API documentation:
     https://mastodonpy.readthedocs.io/en/stable/
 
 TODO:
-           - Generally nice and friendly installation?
-    [MT]   - Handle character limit exceptions
+    - Generally nice and friendly installation?
+    - Handle character limit exceptions
+    - Use case statements in python 3.10 for footer function? maybe other ones?
 '''
 import os
 import logging
@@ -20,7 +21,12 @@ from mastodon import Mastodon
 
 # visibility of mastodon posts: direct, unlisted, public, etc.
 mastodon_visibility = "direct"
+character_limit = 500
 
+
+'''
+Basic setup
+'''
 logging.basicConfig(format='%(asctime)s: %(levelname)s %(name)s | %(message)s',
                     level=logging.INFO)
 logger = telebot.logger.setLevel(logging.INFO)
@@ -78,20 +84,33 @@ def ping_bots():
 
 
 '''
-Posting
+Functions
 '''
 
 
-# Returns message text + channel name or title(if private)
+def footer_text(message):
+    final_text = ""
+    if message.forward_from_chat != None and message.chat.username != None:
+        final_text = message.text + "\r\r@" + message.chat.username
+    elif message.forward_from_chat != None and message.chat.username == None:
+        final_text = message.text + "\r\r" + message.chat.title
+    elif message.chat.username != None:
+        final_text = message.text + "\r\r@" + message.chat.username
+    elif message.chat.username == None:
+        final_text = message.text + "\r\r" + message.chat.title
+    else:
+        final_text = message.text
+
+    if len(final_text) < character_limit:
+        return final_text
+    else:
+        final_text_split = [(final_text[i:i+character_limit])
+                            for i in range(0, len(final_text), character_limit)]
+        return final_text_split
+
+
 def footer(message, media=False):
-    if not media and message.forward_from_chat == None:
-        try:
-            message_to_status = message.text + "\r\r@" + message.chat.username
-            return message_to_status
-        except TypeError:
-            message_to_status = message.text + "\r\r" + message.chat.title
-            return message_to_status
-    elif not media:
+    if not media:
         try:
             message_to_status = message.text + "\r\r@" + message.chat.username + \
                 f"\nForwarded from {message.json.forward_from_chat.title}"
@@ -114,8 +133,11 @@ def footer(message, media=False):
                 return message_to_status
 
 
-# Repost 1 image (mastodon allows up to 4 in one post)
-# This actually just posts multiple images in separate statuses and random order
+'''
+Posting
+'''
+
+
 @bot.channel_post_handler(content_types=["photo"])
 def get_image(message):
     logging.info(f"New message: {message}")
@@ -159,15 +181,25 @@ def get_video(message):
 @bot.channel_post_handler(content_types=["text"])
 def get_text(message):
     logging.info(f"New telegram post: {message}")
-    # Get text from telegram
-    status_text = footer(message, media=False)
-    logging.info(f"Status text: {status_text}")
-    # Post final content https://mastodonpy.readthedocs.io/en/stable/#writing-data-statuses
-    # For more details on how to solve character limits https://mastodonpy.readthedocs.io/en/stable/#mastodon.Mastodon.status_reply
-    posted = mastodon_bot.status_post(
-        status=status_text, visibility=mastodon_visibility)
-    logging.info(f"Posted: {posted['uri']}")
+    status_text = footer_text(message)
 
+    if type(status_text) == list:
+        recent_post = mastodon_bot.status_post(
+            status=status_text[0], visibility=mastodon_visibility)
+
+        for i in status_text:
+            this_recent_post = mastodon_bot.status_post(
+                status=i, visibility=mastodon_visibility, in_reply_to_id=recent_post.get('id'))
+            recent_post = this_recent_post
+    else:
+        print(status_text)
+        mastodon_bot.status_post(
+            status=status_text, visibility=mastodon_visibility)
+
+
+'''
+Finally run tg polling
+'''
 
 try:
     ping_bots()
@@ -175,7 +207,7 @@ try:
 except KeyboardInterrupt:
     exit(0)
 except:
-    logging.error(f"Post message is too long.")
+    logging.error("Something went wrong.")
     ping_bots()
     bot.polling(interval=5)
 finally:

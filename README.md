@@ -21,7 +21,6 @@ Telegram/Mastodon bot for forwarding messages from telegram channels to mastodon
 
 - Only reposts plain text, images, and videos
 - Image galleries are published as separate posts
-- Posts that are over the character limit will not be posted
 
 # Телеміст
 
@@ -46,4 +45,3 @@ Telegram/Mastodon bot for forwarding messages from telegram channels to mastodon
 
 - Підтримуються лише текст, світлини, та відео
 - Галереї публікуються в окремих дописах
-- Дописи які перевищують кількість допустимих символів ігноруються
