@@ -43,6 +43,8 @@ else:
         logging.fatal(
             "Something is wrong with credentials, delete credentials.py and try again")
         exit(1)
+
+
 '''
 Bots
 '''
@@ -51,24 +53,28 @@ mastodon_bot = Mastodon(access_token=mastodon_token,
                         api_base_url=mastodon_instance)  # i.e.https://mastodon.social
 
 # See if the bot can be accessed
-try:
-    ping_mastodon = mastodon_bot.me()["username"]
-    logging.info(f"Running mastodon as {ping_mastodon}")
-except:
-    logging.fatal("Failed to verify mastodon access token.")
-    exit(1)
 
 # Telegram
 # parse mode can be either HTML or MARKDOWN
 bot = telebot.TeleBot(telegram_token, parse_mode="HTML")
 
 # See if the bot can be accessed
-try:
-    ping_telegram = bot.get_me()
-    logging.info(f"Running telegram as {ping_telegram.username}")
-except:
-    logging.fatal("Failed to verify telegram token.")
-    exit(1)
+
+
+def ping_bots():
+    try:
+        ping_mastodon = mastodon_bot.me()["username"]
+        logging.info(f"Running mastodon as {ping_mastodon}")
+    except:
+        logging.fatal("Failed to verify mastodon access token.")
+        exit(1)
+
+    try:
+        ping_telegram = bot.get_me()
+        logging.info(f"Running telegram as {ping_telegram.username}")
+    except:
+        logging.fatal("Failed to verify telegram token.")
+        exit(1)
 
 
 '''
@@ -77,43 +83,35 @@ Posting
 
 
 # Returns message text + channel name or title(if private)
-def footer(message, image=False):
-    if not image and message.forward_from_chat == None:
-        print("!!! message is text and is not forwarded")
+def footer(message, media=False):
+    if not media and message.forward_from_chat == None:
         try:
-            print("!!! Trying text + caption w/ username")
             message_to_status = message.text + "\r\r@" + message.chat.username
             return message_to_status
         except TypeError:
-            print("!!! Trying text + caption w/ title")
             message_to_status = message.text + "\r\r" + message.chat.title
             return message_to_status
-    elif not image:
-        print("!!! message is text but is forwarded ")
+    elif not media:
         try:
-            print("!!! Trying text + caption w/ username + forwarded from title")
             message_to_status = message.text + "\r\r@" + message.chat.username + \
                 f"\nForwarded from {message.json.forward_from_chat.title}"
             return message_to_status
         except TypeError:
-            print("!!! Trying text + caption w/ username + forwarded from title")
             message_to_status = message.text + "\r\r" + message.chat.title + \
                 f"Forwarded from {message.json['forward_from_chat']['username']}"
             return message_to_status
-    elif image:
+    elif media:
         try:
-            print("!!! Trying image + caption w/ username")
             message_to_status = message.json['caption'] + \
                 "\r\r" + message.chat.username
             return message_to_status
-        except TypeError:
-            print("!!! Trying image + username")
-            message_to_status = message.chat.username
-            return message_to_status
         except KeyError:
-            print("!!! Trying image + title")
-            message_to_status = message.chat.title
-            return message_to_status
+            try:
+                message_to_status = "@" + message.chat.username
+                return message_to_status
+            except TypeError:
+                message_to_status = message.chat.title
+                return message_to_status
 
 
 # Repost 1 image (mastodon allows up to 4 in one post)
@@ -121,17 +119,17 @@ def footer(message, image=False):
 @bot.channel_post_handler(content_types=["photo"])
 def get_image(message):
     logging.info(f"New message: {message}")
-    caption = footer(message, image=True)
+    caption = footer(message, media=True)
 
     fileID = message.photo[-1].file_id
     logging.info(f"Photo ID {fileID}")
 
     file_info = bot.get_file(fileID)
     downloaded_file = bot.download_file(file_info.file_path)
-    with open("tmp.jpg", "wb") as tmp_image:
+    with open("tmp_img", "wb") as tmp_image:
         tmp_image.write(downloaded_file)
 
-    media_id = mastodon_bot.media_post("tmp.jpg")
+    media_id = mastodon_bot.media_post("tmp_img")
     posted = mastodon_bot.status_post(
         status=caption, media_ids=media_id, visibility=mastodon_visibility)
     logging.info(f"Posted: {posted['uri']}")
@@ -140,7 +138,7 @@ def get_image(message):
 @bot.channel_post_handler(content_types=["video"])
 def get_video(message):
     logging.info(message)
-    caption = footer(message, image=True)
+    caption = footer(message, media=True)
 
     fileID = message.video.file_id
     logging.info(f"Video ID {fileID}")
@@ -162,7 +160,7 @@ def get_video(message):
 def get_text(message):
     logging.info(f"New telegram post: {message}")
     # Get text from telegram
-    status_text = footer(message, image=False)
+    status_text = footer(message, media=False)
     logging.info(f"Status text: {status_text}")
     # Post final content https://mastodonpy.readthedocs.io/en/stable/#writing-data-statuses
     # For more details on how to solve character limits https://mastodonpy.readthedocs.io/en/stable/#mastodon.Mastodon.status_reply
@@ -172,6 +170,7 @@ def get_text(message):
 
 
 try:
+    ping_bots()
     bot.polling(interval=3)
 except KeyboardInterrupt:
     exit(0)
