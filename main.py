@@ -171,6 +171,12 @@ def get_text(message):
 
 try:
     ping_bots()
-    bot.polling(interval=3)
+    bot.polling(interval=5)
 except KeyboardInterrupt:
     exit(0)
+except:
+    logging.error(f"Post message is too long.")
+    ping_bots()
+    bot.polling(interval=5)
+finally:
+    print("\nBye!")
