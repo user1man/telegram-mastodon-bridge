@@ -2,7 +2,7 @@
 
 ![demonstration](https://github.com/cyborg-ubyvtsya/telegram-mastodon-bridge/blob/main/img/demo.gif)
 
-Telegram/Mastodon bot for forwarding messages from telegram channels to mastodon.
+Telegram/Mastodon bot for forwarding messages.
 
 ## Usage
 
@@ -26,7 +26,7 @@ Telegram/Mastodon bot for forwarding messages from telegram channels to mastodon
 
 # Телеміст
 
-Телеграм/Мастодон бот, який надсилає дописи з каналів в Телеграм в Мастодон.
+Телеграм/Мастодон бот, який дописи з тг в мастодон.
 
 ## Використання
 
