@@ -1,5 +1,7 @@
 # Telebridge
 
+![demonstration](https://github.com/cyborg-ubyvtsya/telegram-mastodon-bridge/blob/main/img/demo.gif)
+
 Telegram/Mastodon bot for forwarding messages from telegram channels to mastodon.
 
 ## Usage
