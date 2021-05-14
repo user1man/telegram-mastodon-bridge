@@ -15,6 +15,7 @@ TODO:
 '''
 import os
 import logging
+import time
 import telebot
 from mastodon import Mastodon
 
@@ -187,7 +188,8 @@ def get_text(message):
         recent_post = mastodon_bot.status_post(
             status=status_text[0], visibility=mastodon_visibility)
 
-        for i in status_text:
+        for i in status_text[1:]:
+            time.sleep(1)
             this_recent_post = mastodon_bot.status_post(
                 status=i, visibility=mastodon_visibility, in_reply_to_id=recent_post.get('id'))
             recent_post = this_recent_post
