@@ -59,13 +59,9 @@ Bots
 mastodon_bot = Mastodon(access_token=mastodon_token,
                         api_base_url=mastodon_instance)  # i.e.https://mastodon.social
 
-# See if the bot can be accessed
-
 # Telegram
 # parse mode can be either HTML or MARKDOWN
 bot = telebot.TeleBot(telegram_token, parse_mode="HTML")
-
-# See if the bot can be accessed
 
 
 def ping_bots():
@@ -90,11 +86,12 @@ Functions
 
 
 def footer_text(message):
-    final_text = ""
     if message.forward_from_chat != None and message.chat.username != None:
-        final_text = message.text + "\r\r@" + message.chat.username
+        final_text = message.text + "\r\r@" + message.chat.username + \
+            f"\nForwarded from {message.forward_from_chat.title}"
     elif message.forward_from_chat != None and message.chat.username == None:
-        final_text = message.text + "\r\r" + message.chat.title
+        final_text = message.text + "\r\r" + message.chat.title + \
+            f"\nForwarded from {message.forward_from_chat.title}"
     elif message.chat.username != None:
         final_text = message.text + "\r\r@" + message.chat.username
     elif message.chat.username == None:
@@ -110,28 +107,40 @@ def footer_text(message):
         return final_text_split
 
 
-def footer(message, media=False):
-    if not media:
+def footer_image(message):
+    if message.forward_from_chat != None:
+        forward = f"\nForwarded from {message.forward_from_chat.title}"
         try:
-            message_to_status = message.text + "\r\r@" + message.chat.username + \
-                f"\nForwarded from {message.json.forward_from_chat.title}"
-            return message_to_status
-        except TypeError:
-            message_to_status = message.text + "\r\r" + message.chat.title + \
-                f"Forwarded from {message.json['forward_from_chat']['username']}"
-            return message_to_status
-    elif media:
+            caption = message.json['caption']
+            if message.chat.username != None:
+                final_text = caption + "\r\r@" + message.chat.username + forward
+                return final_text
+            else:
+                final_text = caption + "\r\r" + message.chat.title + forward
+                return final_text
+        except:
+            if message.chat.username != None:
+                final_text = "@" + message.chat.username + forward
+                return final_text
+            else:
+                final_text = message.chat.title + forward
+                return final_text
+    else:
         try:
-            message_to_status = message.json['caption'] + \
-                "\r\r" + message.chat.username
-            return message_to_status
+            caption = message.json['caption']
+            if message.chat.username != None:
+                final_text = caption + "\r\r@" + message.chat.username
+                return final_text
+            else:
+                final_text = caption + "\r\r" + message.chat.title
+                return final_text
         except KeyError:
-            try:
-                message_to_status = "@" + message.chat.username
-                return message_to_status
-            except TypeError:
-                message_to_status = message.chat.title
-                return message_to_status
+            if message.chat.username != None:
+                final_text = "@" + message.chat.username
+                return final_text
+            else:
+                final_text = message.chat.title
+                return final_text
 
 
 '''
@@ -142,7 +151,7 @@ Posting
 @bot.channel_post_handler(content_types=["photo"])
 def get_image(message):
     logging.info(f"New message: {message}")
-    caption = footer(message, media=True)
+    caption = footer_image(message)
 
     fileID = message.photo[-1].file_id
     logging.info(f"Photo ID {fileID}")
@@ -161,7 +170,7 @@ def get_image(message):
 @bot.channel_post_handler(content_types=["video"])
 def get_video(message):
     logging.info(message)
-    caption = footer(message, media=True)
+    caption = footer_image(message)
 
     fileID = message.video.file_id
     logging.info(f"Video ID {fileID}")
@@ -208,9 +217,9 @@ try:
     bot.polling(interval=5)
 except KeyboardInterrupt:
     exit(0)
-except:
-    logging.error("Something went wrong.")
-    ping_bots()
-    bot.polling(interval=5)
+# except:
+#     logging.error("Something went wrong.")
+#     ping_bots()
+#     bot.polling(interval=5)
 finally:
     print("\nBye!")
