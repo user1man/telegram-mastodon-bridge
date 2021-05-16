@@ -6,9 +6,9 @@ Telegram/Mastodon bot for forwarding messages.
 
 ## Usage
 
-- Create a telegram bot
+- [Create a telegram bot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)
 - - Recieve telegram's access token
-- Create a mastodon bot
+- [Create a mastodon bot](https://tinysubversions.com/notes/mastodon-bot/)
 - - Give it the rights to write statuses
 - - Save mastodon's access token
 - Subscribe your telegram bot to channel(s) you need
@@ -30,9 +30,9 @@ Telegram/Mastodon bot for forwarding messages.
 
 ## Використання
 
-- Створіть бота в Телеграм
+- [Створіть бота в Телеграм](https://core.telegram.org/bots#3-how-do-i-create-a-bot)
 - - Отримайте токен доступу
-- Створіть бота в Мастодон
+- [Створіть бота в Мастодон](https://tinysubversions.com/notes/mastodon-bot/)
 - - Дайте йому доступ до створення дописів
 - - Збережіть токен доступу
 - Підпишіть бота на потрібні канали в телеграмі
