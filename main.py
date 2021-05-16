@@ -10,7 +10,7 @@ Mastodon bot API documentation:
 
 TODO:
     - Generally nice and friendly installation?
-    - Handle character limit exceptions
+    - Handle character limit exceptions in image and video posts
     - Use case statements in python 3.10 for footer function? maybe other ones?
 '''
 import os
@@ -20,8 +20,6 @@ import telebot
 from mastodon import Mastodon
 
 
-# visibility of mastodon posts: direct, unlisted, public, etc.
-mastodon_visibility = "direct"
 character_limit = 500
 
 
@@ -39,12 +37,14 @@ if (os.path.isfile("credentials.py") == False):
     mastodon_token = input("Enter your mastodon bot token: ")
     mastodon_instance = input(
         "Enter url to instance where your bot is located(https://example.social): ")
+    mastodon_visibility = input(
+        "Enter mastodon posts visibility(public, unlisted, or private): ")
     with open("credentials.py", "w") as creds:
         creds.write(
-            f"telegram_token = '{telegram_token}'\nmastodon_token = '{mastodon_token}'\nmastodon_instance = '{mastodon_instance}'")
+            f"telegram_token = '{telegram_token}'\nmastodon_token = '{mastodon_token}'\nmastodon_instance = '{mastodon_instance}'\nmastoton_visibility={mastodon_visibility}")
 else:
     try:
-        from credentials import mastodon_token, telegram_token, mastodon_instance
+        from credentials import mastodon_token, telegram_token, mastodon_instance, mastodon_visibility
         logging.info("Running normally")
     except ImportError:
         logging.fatal(
@@ -217,9 +217,9 @@ try:
     bot.polling(interval=5)
 except KeyboardInterrupt:
     exit(0)
-# except:
-#     logging.error("Something went wrong.")
-#     ping_bots()
-#     bot.polling(interval=5)
+except:
+    logging.error("Something went wrong.")
+    ping_bots()
+    bot.polling(interval=5)
 finally:
     print("\nBye!")
