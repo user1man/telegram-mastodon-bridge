@@ -13,10 +13,7 @@ Telegram/Mastodon bot for forwarding messages.
 - - Save mastodon's access token
 - Subscribe your telegram bot to channel(s) you need
 - Install dependencies `pip install -r requirements.txt`
-- Edit main.py's `mastodon_visibility = "direct"` variable
-- Launch main.py
-- - Give it telegram token
-- - Then mastodon one
+- Launch main.py and follow instructions
 - Bot will start forwarding posts
 
 ### Limitations
@@ -38,9 +35,7 @@ Telegram/Mastodon bot for forwarding messages.
 - Підпишіть бота на потрібні канали в телеграмі
 - Встановіть залежності `pip install -r requirements.txt`
 - Відкрийте main.py і змініть видимість постів в `mastodon_visibility = "direct"`
-- Запустіть скрипт
-- - Дайте йому токен телеграму
-- - Дайте йому токен мастодону
+- Запустіть скрипт і слідуйте інструкціям
 - Бот почне постити нові дописи з каналу на який він підписаний
 
 ### Обмеження
