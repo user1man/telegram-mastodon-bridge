@@ -1,3 +1,4 @@
+#!/bin/env python
 '''
 |--------------------------------------------------------------|
 |                 Telegram to Mastodon bridge                  |
@@ -150,7 +151,7 @@ Posting
 
 @bot.channel_post_handler(content_types=["photo"])
 def get_image(message):
-    logging.info(f"New message: {message}")
+    logging.info(f"New {message.content_type}")
     caption = footer_image(message)
 
     fileID = message.photo[-1].file_id
@@ -169,7 +170,7 @@ def get_image(message):
 
 @bot.channel_post_handler(content_types=["video"])
 def get_video(message):
-    logging.info(message)
+    logging.info(f"New {message.content_type}")
     caption = footer_image(message)
 
     fileID = message.video.file_id
@@ -190,7 +191,7 @@ def get_video(message):
 # repost text messages
 @bot.channel_post_handler(content_types=["text"])
 def get_text(message):
-    logging.info(f"New telegram post: {message}")
+    logging.info(f"New {message.content_type}")
     status_text = footer_text(message)
 
     if type(status_text) == list:
