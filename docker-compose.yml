@@ -1,0 +1,14 @@
+version: "3"
+
+services:    
+    telegram-mastodon-bridge:
+      build:
+        context: "."
+        dockerfile: Dockerfile
+      container_name: telegram-mastodon-bridge
+      environment:
+        - MASTODON_TOKEN=${MASTODON_TOKEN}
+        - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+        - MASTODON_INSTANCE=${MASTODON_INSTANCE}
+        - MASTODON_VISIBILITY=${MASTODON_VISIBILITY}
+      restart: always
