@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "telegram-mastodon-bridge"
+version = "0.1.0"
+description = ""
+authors = [
+  "roborg-codes",
+  "Skyrim-police",
+  "Carlos Lugones <contact@lugodev.com>"
+]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+"Mastodon.py" = "^1.5.1"
+python-dotenv = "^0.19.2"
+pyTelegramBotAPI = "^4.3.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
