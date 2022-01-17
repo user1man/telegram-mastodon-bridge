@@ -26,3 +26,8 @@ Telegram/Mastodon bot for forwarding messages.
 
 - Only reposts plain text, images, and videos
 - Image galleries are published as separate posts
+
+## References
+
+- [Telegram bot API documentation](https://pypi.org/project/pyTelegramBotAPI/)
+- [Mastodon bot API documentation](https://mastodonpy.readthedocs.io/en/stable/)
