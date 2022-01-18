@@ -12,7 +12,7 @@ class Footer():
         return f"\r\rPosted in https://t.me/{name}"
 
 
-    def __make_text(self, final_text: str, message: telebot.types.Message, character_limit: int) -> List:
+    def __make_text(self, final_text: str, message: telebot.types.Message, character_limit: int) -> List[str]:
         if message.chat.username:
             final_text += self.__posted_in(message.chat.username)
         else:
@@ -28,14 +28,14 @@ class Footer():
                                 for i in range(0, len(final_text), character_limit)]
 
 
-    def text(self, message: telebot.types.Message, character_limit: int) -> List:
+    def text(self, message: telebot.types.Message, character_limit: int) -> List[str]:
         if not message.text:
             message.text = ""
         final_text: str = message.text # type: ignore
         return self.__make_text(final_text, message, character_limit)
 
 
-    def caption(self, message: telebot.types.Message, character_limit: int) -> List:
+    def caption(self, message: telebot.types.Message, character_limit: int) -> List[str]:
         if not message.caption:
             message.caption = ""
         final_text: str = message.caption # type: ignore

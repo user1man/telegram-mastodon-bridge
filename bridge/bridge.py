@@ -102,7 +102,7 @@ class Bridge():
             recent_post = current_post
 
 
-    def __prepare_media(self, fileID: str, caption: List[str]):
+    def __prepare_media(self, fileID: str, caption: List[str]) -> None:
         info: telebot.types.File = self.telegram.get_file(fileID)
         mime, _ = mimetypes.guess_type(info.file_path)
         if not mime:
