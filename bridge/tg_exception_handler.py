@@ -1,8 +1,8 @@
 from telebot import ExceptionHandler
-
+from bridge import logger
 
 class TelegramExceptionHandler(ExceptionHandler):
 
     def handle(self, exception: Exception) -> bool:
-        print(exception)
-        return False
+        logger.exception(exception)
+        return True
