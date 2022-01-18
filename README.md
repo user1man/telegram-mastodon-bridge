@@ -14,15 +14,21 @@ Telegram/Mastodon bot for forwarding messages.
 - Add your Telegram bot to the channels you need as admin
 - Clone the repo
 - Install `Docker` and `docker-compose`
-- Add a .env file with this env vars:
-  - MASTODON_TOKEN=Your_Mastodon_access_token
-  - TELEGRAM_TOKEN=Your_Telegram_token
-  - MASTODON_INSTANCE=https://yourinstance.social
-  - MASTODON_VISIBILITY=public
+- Add a `.env` file with this env vars:
+  - `MASTODON_TOKEN=Your_Mastodon_access_token`
+  - `TELEGRAM_TOKEN=Your_Telegram_token`
+  - `MASTODON_INSTANCE=https://yourinstance.social`
+  - `MASTODON_VISIBILITY=public`
+  - `MASTODON_CHARACTER_LIMIT=500`
 - Run the bot: `docker-compose up --build -d`
 - Bot will start forwarding posts
 
 ### Limitations
 
-- Only reposts plain text, images, and videos
-- Image galleries are published as separate posts
+- Only reposts plain text(mastodon limitation), images, and videos
+- Image galleries are published as separate posts(telebot library limitation)
+
+## References
+
+- [Telegram bot API documentation](https://pypi.org/project/pyTelegramBotAPI/)
+- [Mastodon bot API documentation](https://mastodonpy.readthedocs.io/en/stable/)
