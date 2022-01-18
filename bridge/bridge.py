@@ -30,18 +30,15 @@ class Bridge():
         return self._mastodon
 
 
-    def telegram_ok(self) -> bool:
+    def telegram_ok(self) -> None:
         self._telegram.get_me()
-        return True
 
 
-    def mastodon_ok(self) -> bool:
-        try:
-            self._mastodon.me()
-            return True
-        except Exception as e:
-            logger.exception(e)
-            return False
+    def mastodon_ok(self) -> None:
+        self._mastodon.me()
+        # except Exception as e:
+        #     logger.exception(e)
+        #     return False
         # except mastodon.MastodonNetworkError:
         #     return False
         # except mastodon.MastodonIllegalArgumentError:
@@ -84,10 +81,15 @@ class Bridge():
             raise MastodonError('Mastodon character limit cannot be 0 or less.')
 
 
-    def __send_status(self, text: List[str], media: Optional[str | bytes], mime: Optional[str]) -> None:
+    def __send_status(self, text: List[str], media: Optional[str | bytes] = None, mime: Optional[str] = None) -> None:
+        media_id = self.mastodon.media_post(
+            media,
+            mime_type=mime if mime else None
+        ) if media else None
+
         recent_post = self.mastodon.status_post(
             status=text[0],
-            media_ids=self.mastodon.media_post(media, mime_type=mime),
+            media_ids=media_id,
             visibility=self.mastodon_visibility
         )
         for t in text[1:]:
@@ -105,7 +107,7 @@ class Bridge():
         mime, _ = mimetypes.guess_type(info.file_path)
         if not mime:
             logger.error(f"No mime type can be guessed for {info.file_id} ({info.file_path})")
-            logger.info(f"Trying to save file into /tmp/{info.file_id}")
+            logger.info(f"Trying to save file into /tmp/{info.file_path}")
             path: str = ''.join(["/tmp/", info.file_path])
             file: bytes = self.telegram.download_file(info.file_path)
             with open(path, "wb") as f:
@@ -138,4 +140,4 @@ class Bridge():
 
     def channel_post_text(self, message: telebot.types.Message) -> None:
         status_text = self.footer_helper.text(message, self.mastodon_character_limit)
-        self.__send_status(status_text, media=None, mime=None)
+        self.__send_status(status_text)
