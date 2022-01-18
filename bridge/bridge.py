@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 
+import mimetypes
 import time
 import mastodon
 import telebot
 
-from typing import List
+from typing import List, Optional
 
 from bridge import logger
 from bridge.exceptions import MastodonError
@@ -83,26 +84,36 @@ class Bridge():
             raise MastodonError('Mastodon character limit cannot be 0 or less.')
 
 
-    def __send_media(self, fileID: str, caption: List[str]):
-        file_info = self.telegram.get_file(fileID)
-        downloaded_file = self.telegram.download_file(file_info.file_path)
-        with open("/tmp/tmp_img.jpg", "wb") as tmp_image:
-            tmp_image.write(downloaded_file)
-
-        media_id = self.mastodon.media_post("/tmp/tmp_img.jpg")
+    def __send_status(self, text: List[str], media: Optional[str | bytes], mime: Optional[str]) -> None:
         recent_post = self.mastodon.status_post(
-            status=caption[0],
-            media_ids=media_id,
+            status=text[0],
+            media_ids=self.mastodon.media_post(media, mime_type=mime),
             visibility=self.mastodon_visibility
         )
-        for c in caption[1:]:
+        for t in text[1:]:
             time.sleep(1)
             current_post = self.mastodon.status_post(
-                status=c,
+                status=t,
                 visibility=self.mastodon_visibility,
                 in_reply_to_id=recent_post.get('id'), # type: ignore
             )
             recent_post = current_post
+
+
+    def __prepare_media(self, fileID: str, caption: List[str]):
+        info: telebot.types.File = self.telegram.get_file(fileID)
+        mime, _ = mimetypes.guess_type(info.file_path)
+        if not mime:
+            logger.error(f"No mime type can be guessed for {info.file_id} ({info.file_path})")
+            logger.info(f"Trying to save file into /tmp/{info.file_id}")
+            path: str = ''.join(["/tmp/", info.file_path])
+            file: bytes = self.telegram.download_file(info.file_path)
+            with open(path, "wb") as f:
+                f.write(file)
+            self.__send_status(caption, media=path, mime=None)
+        else:
+            file: bytes = self.telegram.download_file(info.file_path)
+            self.__send_status(caption, media=file, mime=mime)
 
 
     def channel_post_photo(self, message: telebot.types.Message) -> None:
@@ -115,28 +126,16 @@ class Bridge():
         if not message.photo: return
         caption = self.footer_helper.caption(message, self.mastodon_character_limit)
         fileID = message.photo[-1].file_id
-        self.__send_media(fileID, caption)
+        self.__prepare_media(fileID, caption)
 
 
     def channel_post_video(self, message: telebot.types.Message) -> None:
         if not message.video: return
         caption = self.footer_helper.caption(message, self.mastodon_character_limit)
         fileID = message.video.file_id
-        self.__send_media(fileID, caption)
+        self.__prepare_media(fileID, caption)
 
 
     def channel_post_text(self, message: telebot.types.Message) -> None:
         status_text = self.footer_helper.text(message, self.mastodon_character_limit)
-        recent_post = self.mastodon.status_post(
-            status=status_text[0],
-            visibility=self.mastodon_visibility
-        )
-        for i in status_text[1:]:
-            time.sleep(1)
-            current_post = self.mastodon.status_post(
-                status=i,
-                visibility=self.mastodon_visibility,
-                in_reply_to_id=recent_post.get('id'), # type: ignore
-                content_type='text/html',
-            )
-            recent_post = current_post
+        self.__send_status(status_text, media=None, mime=None)
