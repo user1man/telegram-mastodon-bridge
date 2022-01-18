@@ -36,12 +36,8 @@ channel_post_handler_table: Dict[str, Callable] = {
 }
 
 
-@bots.telegram.channel_post_handler(content_types=["text", "photo", "video"])
+@bots.telegram.channel_post_handler(content_types=channel_post_handler_table.keys())
 def main_channel_post_handler(message: telebot.types.Message) -> None:
-    if message.content_type not in channel_post_handler_table.keys():
-        logger.warning(f"Unsupported channel content type: {message.content_type}")
-        return
-
     handler = channel_post_handler_table[message.content_type]
     handler(message)
 
