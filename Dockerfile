@@ -1,4 +1,4 @@
-FROM python:3.8-slim AS telegram-mastodon-bridge
+FROM python:3.11-slim AS telegram-mastodon-bridge
 
 # Global python env vars
 ENV PYTHONFAULTHANDLER=1
