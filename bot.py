@@ -40,7 +40,7 @@ channel_post_handler_table: Dict[str, Callable] = {
 
 @bots.telegram.channel_post_handler(content_types=channel_post_handler_table.keys())
 def main_channel_post_handler(message: telebot.types.Message) -> None:
-    if message.from_user.id != source_id:
+    if message.chat.id != source_id:
         return
     handler = channel_post_handler_table[message.content_type]
     handler(message)
