@@ -11,6 +11,8 @@ from __init__ import (
     mastodon_instance,
     mastodon_visibility,
     character_limit,
+    source_id,
+    telegram_pool_time,
     logger,
 )
 
@@ -38,13 +40,15 @@ channel_post_handler_table: Dict[str, Callable] = {
 
 @bots.telegram.channel_post_handler(content_types=channel_post_handler_table.keys())
 def main_channel_post_handler(message: telebot.types.Message) -> None:
+    if message.from_user.id != source_id:
+        return
     handler = channel_post_handler_table[message.content_type]
     handler(message)
 
 
 def main() -> int:
     try:
-        bots.telegram.polling(interval=5)
+        bots.telegram.polling(interval=telegram_pool_time)
     except KeyboardInterrupt:
         return 0
     return 1

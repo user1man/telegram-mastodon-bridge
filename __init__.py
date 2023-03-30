@@ -10,7 +10,9 @@ mastodon_token: str = str(os.getenv('MASTODON_TOKEN'))
 telegram_token: str = str(os.getenv('TELEGRAM_TOKEN'))
 mastodon_instance: str = str(os.getenv('MASTODON_INSTANCE'))
 mastodon_visibility: str = str(os.getenv('MASTODON_VISIBILITY'))
-character_limit: int = int(os.getenv('MASTODON_CHARACTER_LIMIT')) # type: ignore
+character_limit: int = int(os.getenv('MASTODON_CHARACTER_LIMIT'))
+source_id: int = int(os.getenv('TELEGRAM_SOURCE_ID'))
+telegram_pool_time: int = int(os.getenv('TELEGRAM_POOL_TIME'))
 
 logging.basicConfig(
     format='%(asctime)s: %(levelname)s %(name)s | %(message)s',
